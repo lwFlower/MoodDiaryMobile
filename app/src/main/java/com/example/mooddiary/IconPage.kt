@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -20,16 +21,16 @@ import androidx.navigation.compose.rememberNavController
 fun IconScreen(navController: NavController) {
 
     val MoodList = listOf(
-        R.drawable.good,
-        R.drawable.meh,
-        R.drawable.frown
+        R.drawable.good to "Хорошо",
+        R.drawable.meh to "Средне",
+        R.drawable.frown to "Плохо"
     )
 
     val EmotionList = listOf(
-        R.drawable.emoji_sad,
-        R.drawable.emoji_cry,
-        R.drawable.emoji_cool,
-        R.drawable.emoji_happy,
+        R.drawable.emoji_sad to "Грустно",
+        R.drawable.emoji_cry to "Плачу",
+        R.drawable.emoji_cool to "Круто",
+        R.drawable.emoji_happy to "Счастливо",
     )
     Scaffold(
         topBar = {
@@ -54,7 +55,7 @@ fun IconScreen(navController: NavController) {
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center // Центрируем содержимое
                 ){
-                    IconButton(onClick = { navController.popBackStack() },
+                    IconButton(onClick = { navController.navigate("create_emoji") },
                         Modifier.size(80.dp)) {
                         Image(
                             painter = painterResource(id = R.drawable.add),
@@ -71,11 +72,11 @@ fun IconScreen(navController: NavController) {
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            EmojiCard(MoodList, "Состояния")
+            EmojiCard(MoodList, "Состояния", navController)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            EmojiCard(EmotionList, "Эмоции")
+            EmojiCard(EmotionList, "Эмоции", navController)
 
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -84,8 +85,9 @@ fun IconScreen(navController: NavController) {
 
 @Composable
 fun EmojiCard(
-    emojis: List<Int>,
+    emojis: List<Pair<Int, String>>,
     titleText: String,
+    navController: NavController
 ) {
     Card(
         modifier = Modifier
@@ -112,19 +114,27 @@ fun EmojiCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                emojis.forEach { emojiRes ->
+                emojis.forEach { (emojiRes, name) ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier
+                            .padding(end = 8.dp)
                     ) {
                         Image(
                             painter = painterResource(id = emojiRes),
                             contentDescription = "Mood Icon",
                             modifier = Modifier
+                                .clickable { navController.navigate("create_emoji") }
                                 .size(60.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Black,
                         )
                     }
                 }

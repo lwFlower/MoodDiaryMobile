@@ -40,6 +40,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.accompanist.flowlayout)
+    implementation (libs.androidx.activity.ktx)
+    implementation (libs.coil.compose)
     implementation (libs.androidx.core.ktx.v170) // или последняя версия
     implementation (libs.androidx.activity.compose.v131) // для Compose
     implementation (libs.ui) // для Compose

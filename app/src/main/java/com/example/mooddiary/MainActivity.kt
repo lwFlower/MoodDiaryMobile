@@ -57,7 +57,7 @@ fun MainScreen() {
             composable("records") { RecordsScreen(navController) }
             composable("add") { AddScreen(navController) }
             composable("analytics") { AnalyticsScreen(navController) }
-            composable("create_emoji") { CreateEmojiScreen(navController) }
+           composable("create_emoji") { EmojiEditScreen(navController) }
             composable("emojiList") { IconScreen(navController) }
         }
     }
