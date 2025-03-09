@@ -45,21 +45,16 @@ class MainActivity : androidx.activity.ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "records",
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("records") { RecordsScreen(navController) }
-            composable("add") { AddScreen(navController) }
-            composable("analytics") { AnalyticsScreen(navController) }
-           composable("create_emoji") { EmojiEditScreen(navController) }
-            composable("emojiList") { IconScreen(navController) }
-        }
+    NavHost(
+        navController = navController,
+        startDestination = "records",
+        modifier = Modifier.padding(16.dp) // Убедись, что здесь правильно передан отступ
+    ) {
+        composable("records") { RecordsScreen(navController) }
+        composable("add") { AddScreen(navController) }
+        composable("analytics") { AnalyticsScreen(navController) }
+        composable("create_emoji") { EmojiEditScreen(navController) }
+        composable("emojiList") { IconScreen(navController) }
     }
 }
 
@@ -73,6 +68,7 @@ fun ShowRecordScreen(){
 @Composable
 fun RecordsScreen(navController: NavController) {
     Scaffold(
+        bottomBar = { BottomNavigationBar(navController) }
     ) { paddingValues ->
         val scrollState = rememberScrollState()
         var isVisible = remember { mutableStateOf(false) }
@@ -99,7 +95,8 @@ fun RecordsScreen(navController: NavController) {
                     Icon(
                         imageVector = Icons.Default.Menu,
                         contentDescription = "menu",
-                        modifier = Modifier.size(50.dp)
+                        modifier = Modifier
+                            .size(50.dp)
                             .clickable {
                                 isVisible.value = !isVisible.value
                             },
@@ -137,7 +134,8 @@ fun RecordsScreen(navController: NavController) {
                 Menu(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .offset(x = (-60).dp, y = 50.dp)
+                        .offset(x = (-60).dp, y = 50.dp),
+                    navController
                 )
             }
         }
@@ -428,7 +426,7 @@ fun RecordCardShort(
 }
 
 @Composable
-fun Menu(modifier: Modifier){
+fun Menu(modifier: Modifier, navController: NavController){
     Column(modifier = modifier
         .padding(16.dp)
         .clip(RoundedCornerShape(8.dp))
@@ -442,7 +440,7 @@ fun Menu(modifier: Modifier){
         ) { Text(text = "Значки",
             fontSize = 20.sp,
             modifier = Modifier
-                .clickable { /* действие */ }
+                .clickable { navController.navigate("emojiList") }
         ) }
 
         Row (Modifier
@@ -451,7 +449,7 @@ fun Menu(modifier: Modifier){
         ) { Text(text = "Уведомления",
             fontSize = 20.sp,
             modifier = Modifier
-                .clickable { /* действие */ }
+                .clickable { }
         ) }
 
     }
