@@ -1,5 +1,8 @@
 package com.example.mooddiary
 
+import android.os.Bundle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -19,73 +22,122 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.mooddiary.ui.theme.MoodDiaryTheme
 
-@Preview
-@Composable
-fun RecordsScreen() {
-    val navController = rememberNavController()
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController)
+class MainActivity : androidx.activity.ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MoodDiaryTheme {
+                MainScreen()
+            }
         }
-    ) { paddingValues ->
+    }
+}
+
+@Composable
+fun MainScreen() {
+    val navController = rememberNavController()
+
+    Scaffold(
+        bottomBar = { BottomNavigationBar(navController) }
+    ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = "records",
-            modifier = Modifier.padding(PaddingValues())
+            modifier = Modifier.padding(innerPadding)
         ) {
-            composable("add") { AddScreen() }
-            composable("analytics") { AnalyticsScreen() }
+            composable("records") { RecordsScreen(navController) }
+            composable("add") { AddScreen(navController) }
+            composable("analytics") { AnalyticsScreen(navController) }
+            composable("create_emoji") { CreateEmojiScreen(navController) }
+            composable("emojiList") { IconScreen(navController) }
         }
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Ваши записи",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = Color.Black
-                )
+    }
+}
 
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "menu",
-                    modifier = Modifier.size(50.dp)
-                        .clickable {
-                            showLayout()
-                        },
-                )
-            }
+@Preview
+@Composable
+fun ShowRecordScreen(){
+    val navController = rememberNavController()
+    RecordsScreen(navController)
+}
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+@Composable
+fun RecordsScreen(navController: NavController) {
+    Scaffold(
+    ) { paddingValues ->
+        val scrollState = rememberScrollState()
+        var isVisible = remember { mutableStateOf(false) }
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .verticalScroll(scrollState)
             ) {
-                RecordCardFull(
-                    mood = "хорошо",
-                    dateTime = "02.03, 23:00",
-                    emojis = listOf(R.drawable.emoji_happy to 60, R.drawable.emoji_cool to 70, R.drawable.emoji_sad to 20),
-                    text = "Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.",
-                    imageName = "good"
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Ваши записи",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = Color.Black
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "menu",
+                        modifier = Modifier.size(50.dp)
+                            .clickable {
+                                isVisible.value = !isVisible.value
+                            },
+                    )
+                }
 
-                RecordCardShort(
-                    mood = "средне",
-                    dateTime = "03.03, 12:00",
-                    emojis = listOf(R.drawable.emoji_cry to 50, R.drawable.emoji_sad to 50),
-                    text = "Дополнительный текст",
-                    imageName =  "meh"
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    RecordCardFull(
+                        mood = "хорошо",
+                        dateTime = "02.03, 23:00",
+                        emojis = listOf(
+                            R.drawable.emoji_happy to 60,
+                            R.drawable.emoji_cool to 70,
+                            R.drawable.emoji_sad to 20
+                        ),
+                        text = "Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.Lorem ipsum dolor amet.",
+                        imageName = "good"
+                    )
+
+                    RecordCardShort(
+                        mood = "средне",
+                        dateTime = "03.03, 12:00",
+                        emojis = listOf(R.drawable.emoji_cry to 50, R.drawable.emoji_sad to 50),
+                        text = "Дополнительный текст",
+                        imageName = "meh"
+                    )
+                }
+            }
+            if (isVisible.value) {
+                Menu(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-60).dp, y = 50.dp)
                 )
             }
         }
@@ -94,6 +146,7 @@ fun RecordsScreen() {
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     Column {
         Box(
             modifier = Modifier
@@ -106,7 +159,6 @@ fun BottomNavigationBar(navController: NavController) {
             containerColor = Color.White,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 NavigationBarItem(
@@ -114,13 +166,13 @@ fun BottomNavigationBar(navController: NavController) {
                         Icon(
                             painter = painterResource(id = R.drawable.home),
                             contentDescription = "Записи",
-                            modifier = Modifier.size(45.dp)
+                            modifier = Modifier.size(45.dp),
                         )
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF570B99),
                         unselectedIconColor = Color.Gray),
-                    selected = true,
+                    selected = currentRoute == "records",
                     onClick = { navController.navigate("records") },
                 )
                 NavigationBarItem(
@@ -146,7 +198,7 @@ fun BottomNavigationBar(navController: NavController) {
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF570B99),
                         unselectedIconColor = Color.Gray),
-                    selected = true,
+                    selected = currentRoute == "analytics",
                     onClick = { navController.navigate("analytics") },
                 )
             }
@@ -351,7 +403,7 @@ fun RecordCardShort(
                             painter = painterResource(id = emojiRes),
                             contentDescription = "Mood Icon",
                             modifier = Modifier
-                                .size(60.dp)
+                                .size(50.dp)
                         )
                     }
                 }
@@ -375,5 +427,34 @@ fun RecordCardShort(
     }
 }
 
+@Composable
+fun Menu(modifier: Modifier){
+    Column(modifier = modifier
+        .padding(16.dp)
+        .clip(RoundedCornerShape(8.dp))
+        .background(Color.White)
+        .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
+        .padding(7.dp)) {
+        
+        Row (Modifier
+            .padding(7.dp)
+            .background(Color.White)
+        ) { Text(text = "Значки",
+            fontSize = 20.sp,
+            modifier = Modifier
+                .clickable { /* действие */ }
+        ) }
+
+        Row (Modifier
+            .padding(7.dp)
+            .background(Color.White)
+        ) { Text(text = "Уведомления",
+            fontSize = 20.sp,
+            modifier = Modifier
+                .clickable { /* действие */ }
+        ) }
+
+    }
+}
 
 

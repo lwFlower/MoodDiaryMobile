@@ -40,6 +40,9 @@ android {
 }
 
 dependencies {
+    implementation (libs.androidx.core.ktx.v170) // или последняя версия
+    implementation (libs.androidx.activity.compose.v131) // для Compose
+    implementation (libs.ui) // для Compose
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
