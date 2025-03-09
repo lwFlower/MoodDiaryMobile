@@ -24,28 +24,7 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun AnalyticsScreen(navController: NavController) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() },
-                        Modifier.size(60.dp)) {
-                        Image(
-                            painter = painterResource(id = R.drawable.back),
-                            contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { navController.popBackStack() },
-                        Modifier.size(60.dp)) {
-                        Image(
-                            painter = painterResource(id = R.drawable.delete),
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
+        bottomBar = { BottomNavigationBar(navController) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
