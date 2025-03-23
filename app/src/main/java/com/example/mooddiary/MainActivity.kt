@@ -8,27 +8,43 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
-import androidx.compose.foundation.background
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.mooddiary.ui.theme.MoodDiaryTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+class MainViewModel : ViewModel() {
+    private val _currentRoute = MutableStateFlow("records")
+    val currentRoute: StateFlow<String> = _currentRoute
+
+    fun navigateTo(route: String) {
+        viewModelScope.launch {
+            _currentRoute.value = route
+        }
+    }
+
+    init {
+        navigateTo("records")
+    }
+}
 
 class MainActivity : androidx.activity.ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,10 +61,25 @@ class MainActivity : androidx.activity.ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
+    val viewModel: MainViewModel = remember { MainViewModel() }
+    val currentRoute by viewModel.currentRoute.collectAsState()
+
+    LaunchedEffect(currentRoute) {
+        if (navController.currentDestination?.route != currentRoute) {
+            navController.navigate(currentRoute) {
+                popUpTo(navController.graph.startDestinationId) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = "records",
-        modifier = Modifier.padding(16.dp) // Убедись, что здесь правильно передан отступ
+        modifier = Modifier.padding(16.dp)
     ) {
         composable("records") { RecordsScreen(navController) }
         composable("add") { AddScreen(navController) }
@@ -60,7 +91,7 @@ fun MainScreen() {
 
 @Preview
 @Composable
-fun ShowRecordScreen(){
+fun ShowRecordScreen() {
     val navController = rememberNavController()
     RecordsScreen(navController)
 }
@@ -82,8 +113,7 @@ fun RecordsScreen(navController: NavController) {
                     .verticalScroll(scrollState)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -97,9 +127,7 @@ fun RecordsScreen(navController: NavController) {
                         contentDescription = "menu",
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable {
-                                isVisible.value = !isVisible.value
-                            },
+                            .clickable { isVisible.value = !isVisible.value }
                     )
                 }
 
@@ -164,26 +192,26 @@ fun BottomNavigationBar(navController: NavController) {
                         Icon(
                             painter = painterResource(id = R.drawable.home),
                             contentDescription = "Записи",
-                            modifier = Modifier.size(45.dp),
+                            modifier = Modifier.size(45.dp)
                         )
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF570B99),
-                        unselectedIconColor = Color.Gray),
+                        unselectedIconColor = Color.Gray
+                    ),
                     selected = currentRoute == "records",
-                    onClick = { navController.navigate("records") },
+                    onClick = { navController.navigate("records") }
                 )
                 NavigationBarItem(
                     icon = {
                         Image(
                             painter = painterResource(id = R.drawable.add),
                             contentDescription = "Mood Icon",
-                            modifier = Modifier
-                                .size(80.dp)
+                            modifier = Modifier.size(80.dp)
                         )
                     },
                     selected = false,
-                    onClick = { navController.navigate("add") },
+                    onClick = { navController.navigate("add") }
                 )
                 NavigationBarItem(
                     icon = {
@@ -195,9 +223,10 @@ fun BottomNavigationBar(navController: NavController) {
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color(0xFF570B99),
-                        unselectedIconColor = Color.Gray),
+                        unselectedIconColor = Color.Gray
+                    ),
                     selected = currentRoute == "analytics",
-                    onClick = { navController.navigate("analytics") },
+                    onClick = { navController.navigate("analytics") }
                 )
             }
         }
@@ -242,8 +271,7 @@ fun RecordCardFull(
                     Image(
                         painter = painterResource(id = imageResource),
                         contentDescription = "Mood Icon",
-                        modifier = Modifier
-                            .size(70.dp, 70.dp)
+                        modifier = Modifier.size(70.dp, 70.dp)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -267,11 +295,10 @@ fun RecordCardFull(
                 )
 
                 Icon(
-                    imageVector = Icons.Default.MoreVert, // Заглушка для иконки меню
+                    imageVector = Icons.Default.MoreVert,
                     contentDescription = "Меню",
                     modifier = Modifier.size(30.dp)
                 )
-
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -288,15 +315,14 @@ fun RecordCardFull(
                         Image(
                             painter = painterResource(id = emojiRes),
                             contentDescription = "Mood Icon",
-                            modifier = Modifier
-                                .size(70.dp)
+                            modifier = Modifier.size(70.dp)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "$percent%",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Black,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -341,7 +367,6 @@ fun RecordCardShort(
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -354,8 +379,7 @@ fun RecordCardShort(
                     Image(
                         painter = painterResource(id = imageResource),
                         contentDescription = "Mood Icon",
-                        modifier = Modifier
-                            .size(60.dp, 60.dp)
+                        modifier = Modifier.size(60.dp, 60.dp)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -383,7 +407,6 @@ fun RecordCardShort(
                     contentDescription = "Меню",
                     modifier = Modifier.size(30.dp)
                 )
-
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -392,7 +415,7 @@ fun RecordCardShort(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                emojis.forEach { (emojiRes, percent) ->
+                emojis.forEach { (emojiRes, _) ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(end = 8.dp)
@@ -400,8 +423,7 @@ fun RecordCardShort(
                         Image(
                             painter = painterResource(id = emojiRes),
                             contentDescription = "Mood Icon",
-                            modifier = Modifier
-                                .size(50.dp)
+                            modifier = Modifier.size(50.dp)
                         )
                     }
                 }
@@ -426,33 +448,37 @@ fun RecordCardShort(
 }
 
 @Composable
-fun Menu(modifier: Modifier, navController: NavController){
-    Column(modifier = modifier
-        .padding(16.dp)
-        .clip(RoundedCornerShape(8.dp))
-        .background(Color.White)
-        .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
-        .padding(7.dp)) {
-        
-        Row (Modifier
-            .padding(7.dp)
+fun Menu(modifier: Modifier, navController: NavController) {
+    Column(
+        modifier = modifier
+            .padding(16.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(Color.White)
-        ) { Text(text = "Значки",
-            fontSize = 20.sp,
-            modifier = Modifier
-                .clickable { navController.navigate("emojiList") }
-        ) }
-
-        Row (Modifier
+            .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
             .padding(7.dp)
-            .background(Color.White)
-        ) { Text(text = "Уведомления",
-            fontSize = 20.sp,
-            modifier = Modifier
-                .clickable { }
-        ) }
+    ) {
+        Row(
+            Modifier
+                .padding(7.dp)
+                .background(Color.White)
+        ) {
+            Text(
+                text = "Значки",
+                fontSize = 20.sp,
+                modifier = Modifier.clickable { navController.navigate("emojiList") }
+            )
+        }
 
+        Row(
+            Modifier
+                .padding(7.dp)
+                .background(Color.White)
+        ) {
+            Text(
+                text = "Уведомления",
+                fontSize = 20.sp,
+                modifier = Modifier.clickable { }
+            )
+        }
     }
 }
-
-
